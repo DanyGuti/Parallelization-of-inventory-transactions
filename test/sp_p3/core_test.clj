@@ -1,7 +1,10 @@
 (ns sp-p3.core-test
   (:require [clojure.test :refer :all]
-            [sp-p3.core :refer :all]))
+            [sp-p3.core :refer :all :as core]))
 
-(deftest a-test
-  (testing "FIXME, I fail."
-    (is (= 0 1))))
+(deftest testMainCore
+  (testing "Multiple threads: ")
+  (core/repeat-main core/-main 5))
+
+
+(run-tests)

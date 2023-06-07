@@ -1,0 +1,28 @@
+#'sp-p3.core/generate-random-number
+clj꞉sp-p3.core꞉> 
+#'sp-p3.core/-main
+clj꞉sp-p3.core꞉> 
+#'sp-p3.core/repeat-main
+clj꞉sp-p3.core꞉> 
+Con:  108  Inventarios
+Con:  46  Transacciones
+El valor total de tu almacén después de las transacciones es: 1014350016
+El 10% de los inventarios con más producto son: 
+(inventory102.txt inventory49.txt inventory70.txt inventory29.txt inventory22.txt inventory28.txt inventory75.txt inventory47.txt inventory41.txt inventory60.txt inventory3.txt)
+"Elapsed time: 2473.737511 msecs"
+nil
+clj꞉sp-p3.core꞉> 
+; Evaluating file: core_test.clj
+
+Testing sp-p3.core-test
+Con:  585  Inventarios
+Con:  45  Transacciones
+El valor total de tu almacén después de las transacciones es: 5569489095
+El 10% de los inventarios con más producto son: 
+(inventory169.txt inventory240.txt inventory563.txt inventory516.txt inventory249.txt inventory431.txt inventory462.txt inventory223.txt inventory39.txt inventory222.txt inventory295.txt inventory428.txt inventory420.txt inventory254.txt inventory88.txt inventory44.txt inventory106.txt inventory156.txt inventory567.txt inventory560.txt inventory469.txt inventory149.txt inventory504.txt inventory566.txt inventory539.txt inventory354.txt inventory476.txt inventory125.txt inventory130.txt inventory477.txt inventory163.txt inventory252.txt inventory280.txt inventory313.txt inventory123.txt inventory228.txt inventory348.txt inventory394.txt inventory310.txt inventory64.txt inventory30.txt inventory286.txt inventory271.txt inventory544.txt inventory194.txt inventory421.txt inventory9.txt inventory570.txt inventory386.txt inventory260.txt inventory112.txt inventory25.txt inventory430.txt inventory284.txt inventory533.txt inventory578.txt inventory491.txt inventory144.txt inventory296.txt)
+"Elapsed time: 12934.534137 msecs"
+
+Ran 1 tests containing 0 assertions.
+0 failures, 0 errors.
+{:test 1, :pass 0, :fail 0, :error 0, :type :summary}
+clj꞉sp-p3.core-test꞉> 

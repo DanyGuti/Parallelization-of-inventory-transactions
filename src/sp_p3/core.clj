@@ -482,8 +482,11 @@
                    (.write writer output-string)))))
            (partition-all 500 result)))))
 
+(defn generate-random-number []
+  (inc (rand-int 1000)))
+
 (defn -main [& args]
-  (let [n 100
+  (let [n (generate-random-number)
         txt (userInput/generate-n-txt n)
         out (userInput/generate-output-txt n)
         n-transactions (inc (rand-int 50))
@@ -513,8 +516,3 @@
     (= n 0) nil
     (> n 0) (do (time (dorun (main)))
                 (repeat-main main (- n 1)))))
-
-(repeat-main #(-main) 1)
-
-
-
