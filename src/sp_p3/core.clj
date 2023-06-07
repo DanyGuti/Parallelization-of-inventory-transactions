@@ -125,9 +125,8 @@
     (map first (map next inv))))
 
 ;; Minimum recursive calls
-;; ((3 ("A1" "100" "1" "0")) (1 ("A1" "100" "1" "0"))) --> (3 ("A1" "100" "1" "0")
+;; ((3 ("A1" "100" "1" "0")) (1 ("A1" "100" "1" "0"))) --> (1 ("A1" "100" "1" "0")
 (defn min-recursive-steps [lst]
-  ;; (println "min-recursive-steps input: " lst) ; Add this line
   (apply min-key first lst))
 
 
@@ -211,7 +210,7 @@
     :else (move-left-right inventory window 0)))
 
 ;; Receive inventory and window
-;; Calls move-left-right if not out of bounds with 0 to move left
+;; Calls move-left-right if not out of bounds with 1 to move right
 (defn R [inventory window]
   (cond
     (nil? inventory) nil
