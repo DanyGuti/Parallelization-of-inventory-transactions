@@ -1,0 +1,16 @@
+;; AHORA VAMOS CON RESULT-LEFT RESULT-RIGHT DE min-check-cols
+;; Se va a la derecha inmediatamente...
+
+;; 1.- Revisar que hacer si se llega hasta el out of bounds de right o left
+;; 2.- Regreso true de out-of-bounds
+;; 3.- Regreso null de R
+;; 4.- Se queda evaluando la min-check-cols-left-right
+;; 5.- Se ejecuta la null? window porque se regresó null
+;; 6.- Se cuentan las llamadas de min-check-cols-left-right
+;; 7.- Ahora se calcula el result-left de min-check-cols-left-right
+;; 8.- Hay algo raro con el left-regex
+;; 9.- Se regresó car de window porque es igual en look-inventory
+;; 10.- En left si regresó la lista de la ventana 
+;; 11.- Estoy en min-check-cols... primero, es nulo el cdr del result right
+
+;; 12.- CREO QUE DEBE SER cadr del result right
