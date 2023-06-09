@@ -104,6 +104,24 @@
                          (flatten string))) lines)]
       (list (sum-inv-price lists) file-path))))
 
+(def get-low-quantity
+  (fn [lists]
+    (map (fn [sublsts]
+           (if (< (Integer/parseInt (first (next (next (next sublsts))))) 5)
+             (first sublsts)
+             false)) lists)))
+
+
+(def low-inventory
+  (fn [file-path]
+    (let [file-contents (slurp file-path)
+          lines (str/split-lines file-contents)
+          lists (map (fn [line]
+                       (let [string (str/split line #" ")]
+                         (flatten string))) lines)]
+      (list (get-low-quantity lists) file-path))))
+
+
 ;; Matches a row and a col based on a letter and index
 (def match-row-col
   (fn [row-match index]
@@ -342,6 +360,9 @@
 (defn printCosts [n]
   (map (fn [file] (generate-cost (str (System/getProperty "user.dir") "/resources/" file))) (take n list-paths)))
 
+(defn printLow [n]
+  (map (fn [file] (low-inventory (str (System/getProperty "user.dir") "/resources/" file))) (take n list-paths)))
+
 ;; Get the paths to every inventory
 ;; --> list with all inventory files
 (def paths-inv
@@ -447,7 +468,7 @@
                                                   transaction-list (first (next (first (next (first (map val vals))))))]
                                               (make-transactions-n window transaction-list key output)))
                                           partition))
-                                  (partition-all 1000 filtered-inventories))
+                                  (partition-all 10 filtered-inventories))
         flattened-results (apply concat transaction-results)]
     flattened-results))
 
@@ -479,13 +500,13 @@
                      output-string (str/join "\n" eval-sublist)]
                  (with-open [writer (io/writer file)]
                    (.write writer output-string)))))
-           (partition-all 500 result)))))
+           (partition-all 10 result)))))
 
 (defn generate-random-number []
   (inc (rand-int 1000)))
 
 (defn -main [& args]
-  (let [n (generate-random-number)
+  (let [n 200
         txt (userInput/generate-n-txt n)
         out (userInput/generate-output-txt n)
         n-transactions (inc (rand-int 50))
@@ -499,17 +520,29 @@
         ;;non-parallel-results (time (print "Time with map: " (dorun (transactions-n-map inventories-hash))))]
     (process-output-write parallel-results)
     (let [costs (map (fn [costs] (first costs)) (printCosts n))
+          low-products-lists (printLow n)
+          low-products (map (fn [lists paths]
+                              (let [filtered-products (filter (fn [sublst] (not= sublst false)) lists)]
+                                (if (empty? filtered-products)
+                                  ()
+                                  (cons filtered-products paths)))) (map first low-products-lists) (map next low-products-lists))
           sorted-costs (reverse (sort-by first (printCosts n)))
           paths (map second (take percentage sorted-costs))]
       (println "Con: " n " Inventarios")
       (println "Con: " n-transactions " Transacciones")
       (println "El valor total de tu almacén después de las transacciones es:" (apply + costs))
-      (println "El 10% de los inventarios con más producto son: ")
+      (print "El 10% de los inventarios con más producto son: ")
       (let [matcher (map (fn [path] (re-matcher extract-file-regex path)) paths)
             inventories (map (fn [file] (first (re-find file))) matcher)]
-        (println inventories))))
+        (println inventories))
+      (dorun (map (fn [products paths] (if (nil? products)
+                                         nil
+                                         (println "Los siguientes productos necesitan refill: " products
+                                                  " del siguiente inventario " paths)))
+                  (map first low-products) (map next low-products)))))
   args)
 
+(-main [])
 (defn repeat-main [main n]
   (cond
     (= n 0) nil
