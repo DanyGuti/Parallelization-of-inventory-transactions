@@ -468,7 +468,7 @@
                                                   transaction-list (first (next (first (next (first (map val vals))))))]
                                               (make-transactions-n window transaction-list key output)))
                                           partition))
-                                  (partition-all 10 filtered-inventories))
+                                  (partition-all n filtered-inventories))
         flattened-results (apply concat transaction-results)]
     flattened-results))
 
@@ -488,25 +488,24 @@
 
 ;; Process every result, use a thread for every output file
 ;; to make the parallel writing
-(defn process-output-write [results]
+(defn process-output-write [results n]
   (let [output-files (map (fn [sublist] (first (next (first sublist)))) results)
         transaction-results (map (fn [result] (map first result)) results)
         result (map (fn [x y] (concat x y)) transaction-results output-files)]
-    (doall
-     (pmap (fn [partition]
-             (doseq [sublist partition]
-               (let [file (last sublist)
-                     eval-sublist (drop-last (doall sublist))
-                     output-string (str/join "\n" eval-sublist)]
-                 (with-open [writer (io/writer file)]
-                   (.write writer output-string)))))
-           (partition-all 10 result)))))
+    (doseq [sublist (partition-all n result)]
+      (dorun (pmap (fn [sub]
+                     (let [file (last sub)
+                           eval-sublist (drop-last sub)
+                           output-string (str/join "\n" eval-sublist)]
+                       (with-open [writer (io/writer file)]
+                         (.write writer output-string))))
+                   sublist)))))
 
 (defn generate-random-number []
-  (inc (rand-int 1000)))
+  (inc (rand-int 10000)))
 
 (defn -main [& args]
-  (let [n 200
+  (let [n (generate-random-number)
         txt (userInput/generate-n-txt n)
         out (userInput/generate-output-txt n)
         n-transactions (inc (rand-int 50))
@@ -515,10 +514,15 @@
         ;; ({inventory1.txt (("output1.txt")("A1" "200" "1" "0") ("L" "R" "-" "+" "-"))}
         ;;  {inventory2.txt (("output1.txt")("A1" "200" "1" "0") ("L" "R" "-" "+" "-"))})
         inventories-hash (doall (generate-inventories-hash movements paths-inv (take n paths-output)))
-        parallel-results  (transactions-n inventories-hash n)
+        calculate-partitions (cond
+                               (< n 100) 10
+                               (and (> n 100) (< n 1000)) (/ n 10)
+                               (and (> n 1000) (<= n 10000)) 1000
+                               :else 500)
+        parallel-results  (transactions-n inventories-hash calculate-partitions)
         percentage (Math/ceil (* n 0.10))]
         ;;non-parallel-results (time (print "Time with map: " (dorun (transactions-n-map inventories-hash))))]
-    (process-output-write parallel-results)
+    (process-output-write parallel-results calculate-partitions)
     (let [costs (map (fn [costs] (first costs)) (printCosts n))
           low-products-lists (printLow n)
           low-products (map (fn [lists paths]
@@ -542,9 +546,10 @@
                   (map first low-products) (map next low-products)))))
   args)
 
-(-main [])
 (defn repeat-main [main n]
   (cond
     (= n 0) nil
     (> n 0) (do (time (dorun (main)))
                 (repeat-main main (- n 1)))))
+
+(repeat-main -main 5)
