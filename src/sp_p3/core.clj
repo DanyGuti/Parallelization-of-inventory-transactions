@@ -121,7 +121,6 @@
                          (flatten string))) lines)]
       (list (get-low-quantity lists) file-path))))
 
-
 ;; Matches a row and a col based on a letter and index
 (def match-row-col
   (fn [row-match index]
@@ -146,7 +145,6 @@
 ;; ((3 ("A1" "100" "1" "0")) (1 ("A1" "100" "1" "0"))) --> (1 ("A1" "100" "1" "0")
 (defn min-recursive-steps [lst]
   (apply min-key first lst))
-
 
 ;; Check for substrings
 ;; -1 substr(0, 1) --> A
@@ -298,6 +296,9 @@
                        (< (Integer/valueOf result) 0) (let [modified-window (list (first list-steps-window) (str (next (first list-steps-window))) (first (next (next list-steps-window))) (str 0))]
                                                         (str " Rellena este producto! 0 del producto" (first list-steps-window)  (modify-file file-path modified-window)))
                        :else (let [modified-window (list (first list-steps-window) (str (next (first list-steps-window))) (first (next (next list-steps-window))) (str result))]
+                               ;(println "Queda: " result " del producto " product (first list-steps-window) " Transacción de:" (if (= symbol -)
+                               ;                                                                                                  "retirar"
+                               ;                                                                                                  "agregar") " en inventario: " file-path)
                                (str " Queda: " result " del producto " product (first list-steps-window) (modify-file file-path modified-window)))))
     (list? (next (first list-steps-window))) (let [result (symbol (Integer/parseInt (first (next (next (next (first (next (min-recursive-steps list-steps-window)))))))) quantity)
                                                    min-steps (first (min-recursive-steps list-steps-window))]
@@ -307,18 +308,33 @@
                                                                                              (str (first (next (first (next (first list-steps-window))))))
                                                                                              (str (first (next (next (first (next (first list-steps-window)))))))
                                                                                              (str 0))]
+                                                                                  ;(println "Queda: 0" " del producto " product  " RELLENA AL PRODUCTO " product "Transacción de: " (if (= symbol -)
+                                                                                  ;                                                                                                   "retirar"
+                                                                                  ;                                                                                                   "agregar") " en inventario: " file-path)
+                                                                                  ;(println "Transacción hecha con los siguientes pasos: " min-steps)
                                                                                   (str " Queda: 0 del product o" product " RELLENA AL PRODUCTO " product ". Transacción hecha con los sig. pasos: " min-steps (modify-file file-path modified-window)))
                                                  :else (let [modified-window
                                                              (list (str (first (first (next (first list-steps-window)))))
                                                                    (str (first (next (first (next (first list-steps-window))))))
                                                                    (str (first (next (next (first (next (first list-steps-window)))))))
                                                                    (str result))]
+                                                         ;(println "Queda: " result " del producto " product  " RELLENA AL PRODUCTO " product "Transacción de: " (if (= symbol -)
+                                                         ;                                                                                                         "retirar"
+                                                         ;                                                                                                         "agregar") " en inventario: " file-path)
+                                                         ;(println "Transacción hecha con los siguientes pasos: " min-steps)
                                                          (str " Queda: " result " del producto: " product ". Transacción hecha con los sig pasos: " min-steps (modify-file file-path modified-window)))))
+
     :else (let [result (symbol (Integer/valueOf (first (next (next (next list-steps-window))))) quantity)]
             (cond
               (< (Integer/valueOf result) 0) (let [modified-window (list (first list-steps-window) (str (first (next list-steps-window))) (first (next (next list-steps-window))) (str 0))]
+                                               ;(println "Rellena este producto! 0 del producto " (first list-steps-window) " Transacción de: " (if (= symbol -)
+                                               ;                                                                                                  "retirar"
+                                               ;                                                                                                  "agregar") " en inventario: " file-path)
                                                (str " Rellena este producto! 0 del producto" (first list-steps-window)  (modify-file file-path modified-window)))
               :else (let [modified-window (list (first list-steps-window) (str (first (next list-steps-window))) (first (next (next list-steps-window))) (str result))]
+                      ;(println "Queda: " result " del producto " product (first list-steps-window) " Transacción de: " (if (= symbol -)
+                      ;                                                                                                   "retirar"
+                      ;                                                                                                   "agregar") " en inventario: " file-path)
                       (str " Queda: " result " del producto " product (first list-steps-window) (modify-file file-path modified-window)))))))
 
 ;; Min steps to get to a product
@@ -360,6 +376,8 @@
 (defn printCosts [n]
   (map (fn [file] (generate-cost (str (System/getProperty "user.dir") "/resources/" file))) (take n list-paths)))
 
+;; Get the low quantities of every inventory
+;; --> list with low quantities 
 (defn printLow [n]
   (map (fn [file] (low-inventory (str (System/getProperty "user.dir") "/resources/" file))) (take n list-paths)))
 
@@ -436,15 +454,19 @@
             (= type-transaction "L"))
         (let [new-window
               (cond
-                (= type-transaction "U") (U (make-inventory (read-file (first key))) window)
-                (= type-transaction "D") (D (make-inventory (read-file (first key))) window)
-                (= type-transaction "R") (R (make-inventory (read-file (first key))) window)
-                (= type-transaction "L") (L (make-inventory (read-file (first key))) window)
+                (= type-transaction "U")  (U (make-inventory (read-file (first key))) window)
+                (= type-transaction "D")  (D (make-inventory (read-file (first key))) window)
+                (= type-transaction "R")  (R (make-inventory (read-file (first key))) window)
+                (= type-transaction "L")  (L (make-inventory (read-file (first key))) window)
                 :else window)]
           (cond
             (nil? new-window) (let [result (make-transactions-n window (next transaction-list) key output-file)]
+                                ;(locking lock (println "Desde ventana " (apply list (doall window)) " con movimiento: " (first transaction-list) " comando no válido, error!!!!"))
+                                ;(locking lock (println "En inventario " key))
                                 (cons (list (str "Desde ventana " (apply list (doall window)) " con movimiento: " (first transaction-list) " comando no válido, error!!! ") (list output-file))  result))
             :else (let [result (make-transactions-n new-window (next transaction-list) key output-file)]
+                    ;(locking lock (println "Desde ventana " (apply list (doall window)) " con movimiento: " (first transaction-list) " se llegó a: " (apply list (doall new-window))))
+                    ;(locking lock (println "En inventario " key))
                     (cons (list (str "Desde ventana " (apply list (doall window)) " con movimiento: " (first transaction-list) " se llegó a: " (apply list (doall new-window))) (list output-file)) result))))
         :else
         (let [product (generate-prod 1)]
@@ -488,27 +510,35 @@
 
 ;; Process every result, use a thread for every output file
 ;; to make the parallel writing
-(defn process-output-write [results n]
+(defn process-output-write-pmap [results n]
   (let [output-files (map (fn [sublist] (first (next (first sublist)))) results)
         transaction-results (map (fn [result] (map first result)) results)
         result (map (fn [x y] (concat x y)) transaction-results output-files)]
-    (doseq [sublist (partition-all n result)]
-      (dorun (pmap (fn [sub]
-                     (let [file (last sub)
-                           eval-sublist (drop-last sub)
-                           output-string (str/join "\n" eval-sublist)]
-                       (with-open [writer (io/writer file)]
-                         (.write writer output-string))))
-                   sublist)))))
+    (doall
+     (pmap (fn [partition]
+             (let [file (last partition)
+                   output-string (str/join "\n" (butlast partition))]
+               (with-open [writer (io/writer file)]
+                 (.write writer output-string)))) result))))
+
+(defn process-output-write-map [results]
+  (let [output-files (map (fn [sublist] (first (next (first sublist)))) results)
+        transaction-results (map (fn [result] (map first result)) results)
+        result (map (fn [x y] (concat x y)) transaction-results output-files)]
+    (dorun (doseq [x result]
+             (let [output-file (last x)
+                   y (str/join "\n" (butlast x))]
+               (with-open [writer (io/writer output-file)]
+                 (.write writer y)))))))
 
 (defn generate-random-number []
-  (inc (rand-int 10000)))
+  (inc (rand-int 1000)))
 
 (defn -main [& args]
   (let [n (generate-random-number)
         txt (userInput/generate-n-txt n)
         out (userInput/generate-output-txt n)
-        n-transactions (inc (rand-int 50))
+        n-transactions 100
         movements (doall (repeatedly n #(generate-transactions n-transactions)))
         ;; Make the list of haçsh maps with output paths 
         ;; ({inventory1.txt (("output1.txt")("A1" "200" "1" "0") ("L" "R" "-" "+" "-"))}
@@ -517,12 +547,12 @@
         calculate-partitions (cond
                                (< n 100) 10
                                (and (> n 100) (< n 1000)) (/ n 10)
-                               (and (> n 1000) (<= n 10000)) 1000
-                               :else 500)
+                               (and (> n 1000) (<= n 10000)) 500
+                               :else 5000)
         parallel-results  (transactions-n inventories-hash calculate-partitions)
         percentage (Math/ceil (* n 0.10))]
         ;;non-parallel-results (time (print "Time with map: " (dorun (transactions-n-map inventories-hash))))]
-    (process-output-write parallel-results calculate-partitions)
+    (process-output-write-pmap parallel-results calculate-partitions)
     (let [costs (map (fn [costs] (first costs)) (printCosts n))
           low-products-lists (printLow n)
           low-products (map (fn [lists paths]
@@ -535,21 +565,26 @@
       (println "Con: " n " Inventarios")
       (println "Con: " n-transactions " Transacciones")
       (println "El valor total de tu almacén después de las transacciones es:" (apply + costs))
-      (print "El 10% de los inventarios con más producto son: ")
+      (print "El 10% de los inventarios con mayor valor en el almacén son: ")
       (let [matcher (map (fn [path] (re-matcher extract-file-regex path)) paths)
             inventories (map (fn [file] (first (re-find file))) matcher)]
         (println inventories))
       (dorun (map (fn [products paths] (if (nil? products)
                                          nil
                                          (println "Los siguientes productos necesitan refill: " products
-                                                  " del siguiente inventario " paths)))
+                                                  " del siguiente inventario " (let [match (re-find extract-file-regex (first paths))]
+                                                                                 (if match
+                                                                                   (first match)
+                                                                                   nil)))))
                   (map first low-products) (map next low-products)))))
   args)
 
+(-main [])
 (defn repeat-main [main n]
   (cond
     (= n 0) nil
     (> n 0) (do (time (dorun (main)))
+                (Thread/sleep 2000)
                 (repeat-main main (- n 1)))))
 
-(repeat-main -main 5)
+;(repeat-main -main 5)
